@@ -8,11 +8,16 @@ module.exports = app => {
   var verifikasi = require("../controller/verifikasi");
 
   app.route("/").get(user.index);
-  app.route("/login").post(auth.auth);
+  app.route("/loginUser").post(auth.auth);
   app.route("/register").post(auth.register);
   app.route("/verifikasi/:token").get(verifikasi.verifikasi);
   app.route("/uploadBukti").post(verifikasi.uploadImageVerification);
 
   app.route("/users").get(user.getAllUsers);
   app.route("/users/:id_user").get(user.findUser);
+  app.route("/ubahPassword").post(user.changePassword);
+  app.route("/requestNewEmail").post(auth.requestNewEmail);
+
+  app.route("/prosesAbsensi").post(admin.simpanAbsensi);
+  app.route("/generateQR").post(admin.generateQR);
 };
