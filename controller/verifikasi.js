@@ -21,7 +21,7 @@ var storage = multer.diskStorage({
   filename: (req, file, cb) => {
     var __uid = Buffer.from(req.body.uid, "base64");
     console.log(req.body.uid);
-    cb(null, __uid + ".jpg");
+    cb(null, req.body.uid + ".jpg");
   }
 });
 var uploadOne = multer({

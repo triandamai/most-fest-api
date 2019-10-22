@@ -21,14 +21,18 @@ var MESSAGE_FAILED = "Operasi Gagal ?";
 var MESSAGE_ERROR = "Error :";
 
 exports.auth = (req, res) => {
-  var user = req.body.user;
+  var user = req.body.email;
   var pass = req.body.password;
-
-  if (user == "trian" && pass == "123456") {
-    response.ok({ user: user, pass: pass }, res, MESSAGE_SUCCESS);
-  } else {
-    response.failed("", res, MESSAGE_FAILED);
-  }
+  connection.query(
+    "SELECT * FROM " + TABLE_USER + " WHERE email=? AND password=?",
+    [user, pass],
+    (err, result, fields) => {
+      err
+        ? response.failed("", res, MESSAGE_ERROR + err.message)
+        : response.ok(result, res, MESSAGE_SUCCESS);
+      console.log(result);
+    }
+  );
 };
 /*
 id dari timestamp 
@@ -75,7 +79,20 @@ exports.index = (req, res) => {
   res.json(data);
   res.end();
 };
-
+exports.requestNewEmail = (req, res) => {
+  if (
+    req.body.email == null ||
+    req.body.email == "" ||
+    req.body.id_user == null ||
+    req.body.id_user == ""
+  ) {
+    response.failed("", res, MESSAGE_ERROR + "isi email dan id");
+  } else {
+    var token = new Buffer.from(req.body.id_user);
+    var __token = token.toString("base64");
+    sendEmail(req, res, __token);
+  }
+};
 function sendEmail(req, res, id) {
   let transporter = nodeMailer.createTransport({
     host: "smtp.gmail.com",
