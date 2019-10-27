@@ -38,28 +38,12 @@ exports.findUser = (req, res) => {
 
 exports.changePassword = (req, res) => {
   connection.query(
-    "SELECT * FROM " + TABLE_USER + " WHERE id_user=?",
-    [req.body.id_user],
+    "UPDATE " + TABLE_USER + " SET password=? WHERE id_user=?",
+    [req.body.newpassword, req.body.id_user],
     (err, result, fields) => {
-      console.log(result[0]);
       err
         ? response.failed("", res, MESSAGE_ERROR + err.message)
-        : result[0].password !== req.body.newpassword
-        ? connection.query(
-            "UPDATE " + TABLE_USER + " SET password=? WHERE id_user=?",
-            [req.body.newpassword, req.body.id_user],
-            (err, result, fields) => {
-              err
-                ? response.failed("", res, MESSAGE_ERROR + err.message)
-                : response.ok(result, res, MESSAGE_SUCCESS);
-            }
-          )
-        : response.failed(
-            "",
-            res,
-            MESSAGE_FAILED +
-              "Password baru tidak boleh sama dengan password lama"
-          );
+        : response.ok(result, res, MESSAGE_SUCCESS);
     }
   );
 };
@@ -67,8 +51,8 @@ exports.changePassword = (req, res) => {
 exports.updateFoto = (req, res) => {};
 exports.updateUser = (req, res) => {
   connection.query(
-    "UPDATE " + TABLE_USER + " SET ",
-    [],
+    "UPDATE " + TABLE_USER + " SET nama=?, nohp=? WHERE id_user=?",
+    [req.body.nama, req.body.nohp, req.body.id_user],
     (err, result, fields) => {
       err
         ? response.failed("", res, MESSAGE_ERROR + err.message)

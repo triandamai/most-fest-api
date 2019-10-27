@@ -11,6 +11,8 @@ var express = require("express");
 var app = express();
 var hbs = require("hbs");
 
+const database = require("../databases/database-promise");
+
 var TABLE_USER = "user";
 var TABLE_KAJIAN = "";
 var TABLE_VALIDASI = "validasi";
@@ -23,14 +25,30 @@ var MESSAGE_ERROR = "Error :";
 exports.auth = (req, res) => {
   var user = req.body.email;
   var pass = req.body.password;
+  if (user == null || user == "" || pass == null || pass == "") {
+    response.failed("", res, MESSAGE_FAILED);
+  } else {
+    connection.query(
+      "SELECT * FROM " + TABLE_USER + " WHERE email=? AND password=?",
+      [user, pass],
+      (err, result, fields) => {
+        err
+          ? response.failed("", res, MESSAGE_ERROR + err.message)
+          : response.ok(result, res, MESSAGE_SUCCESS);
+        console.log(result);
+      }
+    );
+  }
+};
+exports.cekEmail = (req, res) => {
+  var email = req.body.email;
   connection.query(
-    "SELECT * FROM " + TABLE_USER + " WHERE email=? AND password=?",
-    [user, pass],
+    "SELECT * FROM " + TABLE_USER + " WHERE email=?",
+    [email],
     (err, result, fields) => {
       err
         ? response.failed("", res, MESSAGE_ERROR + err.message)
         : response.ok(result, res, MESSAGE_SUCCESS);
-      console.log(result);
     }
   );
 };
@@ -47,29 +65,44 @@ exports.register = (req, res) => {
   var token = new Buffer.from(__id);
   var __token = token.toString("base64");
   // console.log(cek);
-  connection.query(
-    "SELECT * FROM " + TABLE_USER + " WHERE email=?",
-    [username],
-    (err, result, fields) => {
-      err
-        ? response.failed("", res, MESSAGE_ERROR + err.message)
-        : result.length >= 1
-        ? response.failed("", res, MESSAGE_ERROR + "Email Sudah DIgunakan")
-        : connection.query(
-            "INSERT INTO " +
-              TABLE_USER +
-              "(id_user,nama,nohp,email,password,level,status,token) VALUES (?,?,?,?,?,?,?,?)",
-            [__id, nama, nohp, username, password, "user", "deactive", __token],
-            (err, result, fields) => {
-              err
-                ? response.failed("", res, MESSAGE_ERROR + err.message)
-                : sendEmail(req, res, __token);
-            }
-          );
-    }
-  );
+  if (
+    username == null ||
+    username == "" ||
+    password == null ||
+    password == "" ||
+    nama == null ||
+    nama == "" ||
+    nohp == null ||
+    nohp == ""
+  ) {
+    response.failed("", res, MESSAGE_FAILED + "data koosng");
+  } else {
+    connection.query(
+      "INSERT INTO " +
+        TABLE_USER +
+        "(id_user,nama,nohp,email,password,level,status,token) VALUES (?,?,?,?,?,?,?,?)",
+      [__id, nama, nohp, username, password, "user", "deactive", __token],
+      (err, result, fields) => {
+        err
+          ? response.failed("", res, MESSAGE_ERROR + err.message)
+          : response.ok(
+              { hasil: result, verifikasi: __token },
+              res,
+              MESSAGE_SUCCESS
+            );
+      }
+    );
+  }
 };
-
+exports.kirimEmail = (req, res) => {
+  var __token = req.body.token;
+  var email = req.body.email;
+  if (__token == null || __token == "" || email == null || email == "") {
+    response.failed("", res, MESSAGE_ERROR + "isi email dan token");
+  } else {
+    sendEmail(req, res, __token);
+  }
+};
 exports.index = (req, res) => {
   var data = {
     status: 200,
@@ -109,11 +142,20 @@ function sendEmail(req, res, id) {
     subject: "Verifikasi Akun", // Subject line
     text: "halo", // plain text body
     html:
-      "<b>Silahkan klik link berikut <a href='http://localhost:3000/verification/" +
+      "<b>Silahkan klik link berikut <a href='http://localhost/most-fest/index.php/verifikasi?token=" +
       id +
-      "'>klik disini</a></b>"
+      "&&ap=asdf'>klik disini</a></b>"
+
     // html body
   };
+  var data =
+    "<b>Silahkan klik link berikut <a href='http://mostfest.projeku.site/index.php/verifikasi?token=" +
+    id +
+    "&&ap=asdf'>klik disini</a></b>";
+  var data2 =
+    "<b>Silahkan klik link berikut <a href='http://localhost/most-fest/index.php/verifikasi?token=" +
+    id +
+    "&&ap=asdf'>klik disini</a></b>";
 
   transporter.sendMail(mailOptions, (err, info) => {
     err

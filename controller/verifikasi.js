@@ -43,7 +43,7 @@ exports.uploadImageVerification = (req, res) => {
         "UPDATE " +
           TABLE_USER +
           " SET bukti_transfer=?, token=? WHERE id_user=?",
-        [__uid + ".jpg", "kosong", __uid],
+        [uid + ".jpg", "kosong", uid],
         (err, result, fields) => {
           err
             ? response.failed("", res, MESSAGE_ERROR + err.message)
@@ -58,7 +58,7 @@ exports.verifikasi = (req, res) => {
   var user_uid = req.params.token;
   var __uid = Buffer.from(user_uid, "base64");
   var __token = user_uid;
-  //console.log("uid" + __uid, "token" + __token);
+  console.log("uid" + __uid, "token" + __token);
   connection.query(
     "SELECT * FROM " + TABLE_USER + " WHERE id_user=? AND token=?",
     [__uid, __token],
@@ -67,19 +67,24 @@ exports.verifikasi = (req, res) => {
         ? response.failed("", res, MESSAGE_ERROR + err.message)
         : result.length <= 0 || result.length >= 2
         ? response.failed([], res, MESSAGE_FAILED)
-        : updateStatus(__uid, res);
+        : response.ok(result, res, MESSAGE_SUCCESS);
     }
   );
 };
 
-function updateStatus(id, res) {
+exports.updateStatus = (req, res) => {
+  var user_uid = req.params.token;
+  var __uid = Buffer.from(user_uid, "base64");
+  var __token = user_uid;
+  console.log(__uid);
   connection.query(
-    "UPDATE " + TABLE_USER + " set status=? WHERE id_user=?",
-    ["aktif", id],
+    "UPDATE " + TABLE_USER + " set status=?,token=? WHERE id_user=?",
+    ["aktif", "kosong", __uid],
     (err, result, fields) => {
       err
         ? response.failed("", res, MESSAGE_ERROR + err.message)
         : response.ok(result, res, MESSAGE_SUCCESS);
     }
   );
-}
+};
+function updateStatus(id, res) {}
